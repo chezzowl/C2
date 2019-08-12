@@ -5,6 +5,11 @@
 #include "Communication.h"
 #include "WaveFormReader.h"
 #include <string>
+#include <string.h>
+#include <visa.h>
+#include "testing.h"
+
+using namespace std;
 
 //MAIN FUNCTION
 int main(int argc, char* argv[])
@@ -13,21 +18,18 @@ int main(int argc, char* argv[])
 
 	ViStatus status; //helpful status variable
 	ViChar errorBuf[256]; //error buffer
-	char buffer[256];
+	ViChar buffer[256];
 	long elements; //TODO: maybe get rid of this instantiation
 	double* wave = NULL;
-	std::string s;
 
 	/**************************************************************************************/
 	//ViStatus status;
 	//ViChar buffer[256]; //TODO: probably to be removed
 	char c;
 	long count, i;
-	double*		ptr = NULL; //TODO: move to Session.h
+	double *ptr = NULL; //TODO: move to Session.h
 
 	/**************************************************************************************/
-
-	std::cout << "TEST PRINT" << std::endl;
 
 	// initialize sessions
 	status = startRMSession(rm);
@@ -52,8 +54,16 @@ int main(int argc, char* argv[])
 
 	//print buffer size
 	status = viGetAttribute(vi, VI_ATTR_RD_BUF_SIZE, buffer);
-	s = buffer;
-	printf("buffer size: %s\n", s);
+	
+	cout << "Printing buffer : ";
+	for (int i = 0; i < 256; i++) {
+		cout << buffer[i];
+
+		if (i == 255) {
+			cout << endl;
+		}
+	}
+
 
 	/**************************************************************************************/
 	//// Turn headers off, this makes parsing easier
@@ -67,32 +77,20 @@ int main(int argc, char* argv[])
 	//print values
 	if (wave != NULL)
 	{
-		for (int i = 0; i < elements; i++)
-		{
-			std::cout << i << " - ter Eintrag: " << wave[i] << std::endl;
+		for (int i = 0; i < elements; i++){
+			cout << i << " - ter Eintrag: " << wave[i] << endl;
 		}
+	}else{
+		cout << "WAVE IS NULL" << endl;
 	}
 
-	else
-	{
-		std::cout << "WAVE IS NULL" << std::endl;
-	}
-
-	while (true)
-	{
-
-	}
-
-
-	error:
-		std::cout << "ERROR IN MAIN" << std::endl;
+		error:
+		cout << "ERROR IN MAIN" << endl;
 		// Report error and clean up
 		viStatusDesc(vi, status, errorBuf);
 		fprintf(stderr, "MAIN failure: %s\n", errorBuf);
 		//if (ptr != NULL) free(ptr);
 		//return NULL;
-		while (true)
-		{
-
-		}
+		
+	return 0;
 }

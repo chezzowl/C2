@@ -5,197 +5,197 @@
 //#include <visa.h>
 //#include <string>
 //
-//// This function reads the currently selected waveform and returns
+//// this function reads the currently selected waveform and returns
 //// it as an array of doubles.
-//double* ReadWaveform(ViSession vi, long* elements) {
-//	ViStatus	status;
+//double* readwaveform(visession vi, long* elements) {
+//	vistatus	status;
 //	float		yoffset, ymult;
-//	ViChar		buffer[256];
-//	ViChar		c;
+//	vichar		buffer[256];
+//	vichar		c;
 //	long		count, i;
-//	double*		ptr = NULL;
-//	unsigned char		szBuff[256] = { 0, };
+//	double*		ptr = null;
+//	unsigned char		szbuff[256] = { 0, };
 //
-//	assert(elements != NULL);
+//	assert(elements != null);
 //
-//	status = viSetAttribute(vi, VI_ATTR_WR_BUF_OPER_MODE, VI_FLUSH_ON_ACCESS);
-//	status = viSetAttribute(vi, VI_ATTR_RD_BUF_OPER_MODE, VI_FLUSH_ON_ACCESS);
+//	status = visetattribute(vi, vi_attr_wr_buf_oper_mode, vi_flush_on_access);
+//	status = visetattribute(vi, vi_attr_rd_buf_oper_mode, vi_flush_on_access);
 //
-//	//TODO: get buffer size
-//	//viGetAttribute(vi,)
+//	//todo: get buffer size
+//	//vigetattribute(vi,)
 //
-//	// Turn headers off, this makes parsing easier
-//	status = viPrintf(vi, (ViString)"header off\n");
-//	if (status < VI_SUCCESS) goto error;
+//	// turn headers off, this makes parsing easier
+//	status = viprintf(vi, (vistring)"header off\n");
+//	if (status < vi_success) goto error;
 //
 //	// hor:reco? asks for the record length
-//	status = viQueryf(vi, (ViString)"hor:reco?\n", (ViString)"%ld", elements);
-//	if (status < VI_SUCCESS) goto error;
+//	status = viqueryf(vi, (vistring)"hor:reco?\n", (vistring)"%ld", elements);
+//	if (status < vi_success) goto error;
 //
-//	// Make sure start, stop values for curve query match the full record length
+//	// make sure start, stop values for curve query match the full record length
 //	//--> data reading starts at one, finishes at record length
-//	//TODO: why is pointer passed here? maybe look into function declaration if possible?!
-//	status = viPrintf(vi, (ViString)"data:start 1;data:stop %d\n", *elements);
-//	if (status < VI_SUCCESS) goto error;
+//	//todo: why is pointer passed here? maybe look into function declaration if possible?!
+//	status = viprintf(vi, (vistring)"data:start 1;data:stop %d\n", *elements);
+//	if (status < vi_success) goto error;
 //
-//	// Get the yoffset to help calculate the vertical values.
+//	// get the yoffset to help calculate the vertical values.
 //	//yoffset passed by reference, meaning that changes to the variable inside the function 
 //	//are passed through to the actual argument!
-//	status = viQueryf(vi, (ViString)"WFMOutpre:YOFF?\n", (ViString)"%f", &yoffset);
-//	if (status < VI_SUCCESS) goto error;
+//	status = viqueryf(vi, (vistring)"wfmoutpre:yoff?\n", (vistring)"%f", &yoffset);
+//	if (status < vi_success) goto error;
 //
-//	// Get the ymult to help calculate the vertical values.
-//	status = viQueryf(vi, (ViString)"WFMOutpre:YMULT?\n", (ViString)"%f", &ymult);
-//	if (status < VI_SUCCESS) goto error;
+//	// get the ymult to help calculate the vertical values.
+//	status = viqueryf(vi, (vistring)"wfmoutpre:ymult?\n", (vistring)"%f", &ymult);
+//	if (status < vi_success) goto error;
 //
-//	// Request 8bit binary data on the curve query
-//	status = viPrintf(vi, (ViString)"DATA:ENCDG RIBINARY;WIDTH 1\n");
-//	if (status < VI_SUCCESS) goto error;
+//	// request 8bit binary data on the curve query
+//	status = viprintf(vi, (vistring)"data:encdg ribinary;width 1\n");
+//	if (status < vi_success) goto error;
 //
-//	// Request the curve
-//	status = viPrintf(vi, (ViString)"CURVE?\n");
-//	if (status < VI_SUCCESS) goto error;
+//	// request the curve
+//	status = viprintf(vi, (vistring)"curve?\n");
+//	if (status < vi_success) goto error;
 //
-//	// Always flush if a viScanf follows a viPrintf or viBufWrite.
-//	status = viFlush(vi, VI_WRITE_BUF | VI_READ_BUF_DISCARD);
-//	if (status < VI_SUCCESS) goto error;
+//	// always flush if a viscanf follows a viprintf or vibufwrite.
+//	status = viflush(vi, vi_write_buf | vi_read_buf_discard);
+//	if (status < vi_success) goto error;
 //
-//	// Get first char and validate
-//	status = viSetAttribute(vi, VI_ATTR_RD_BUF_OPER_MODE, VI_FLUSH_DISABLE);
-//	status = viScanf(vi, (ViString)"%c", &c);
-//	if (status < VI_SUCCESS) goto error;
+//	// get first char and validate
+//	status = visetattribute(vi, vi_attr_rd_buf_oper_mode, vi_flush_disable);
+//	status = viscanf(vi, (vistring)"%c", &c);
+//	if (status < vi_success) goto error;
 //	assert(c == '#');
 //
-//	// Get width of element field.
-//	status = viScanf(vi, (ViString)"%c", &c);
-//	if (status < VI_SUCCESS) goto error;
+//	// get width of element field.
+//	status = viscanf(vi, (vistring)"%c", &c);
+//	if (status < vi_success) goto error;
 //	assert(c >= '0' && c <= '9');
 //
-//	// Read element characters
+//	// read element characters
 //	count = c - '0';
 //	for (i = 0; i < count; i++) {
-//		status = viScanf(vi, (ViString)"%c", &c);
-//		if (status < VI_SUCCESS) goto error;
+//		status = viscanf(vi, (vistring)"%c", &c);
+//		if (status < vi_success) goto error;
 //		assert(c >= '0' && c <= '9');
 //	}
 //
-//	// Read waveform into allocated storage
+//	// read waveform into allocated storage
 //	ptr = (double*)malloc(*elements * sizeof(double));
 //
 //	for (i = 0; i < *elements; i++) {
-//		status = viScanf(vi, (ViString)"%c", &c);
-//		if (status < VI_SUCCESS) goto error;
+//		status = viscanf(vi, (vistring)"%c", &c);
+//		if (status < vi_success) goto error;
 //		ptr[i] = (((double)c) - yoffset) * ymult;
 //	}
 //
-//	status = viFlush(vi, VI_WRITE_BUF | VI_READ_BUF_DISCARD);
-//	if (status < VI_SUCCESS) goto error;
+//	status = viflush(vi, vi_write_buf | vi_read_buf_discard);
+//	if (status < vi_success) goto error;
 //
 //	return ptr;
 //
 //error:
-//	// Report error and clean up
-//	viStatusDesc(vi, status, buffer);
+//	// report error and clean up
+//	vistatusdesc(vi, status, buffer);
 //	fprintf(stderr, "failure: %s\n", buffer);
-//	if (ptr != NULL) free(ptr);
-//	return NULL;
+//	if (ptr != null) free(ptr);
+//	return null;
 //}
 //
 //
-//// This program reads a waveform from a Tektronix
-//// TDS scope and writes the floating point values to 
+//// this program reads a waveform from a tektronix
+//// tds scope and writes the floating point values to 
 //// stdout.
 //int main(int argc, char* argv[])
 //{
-//	ViSession rm, vi;
-//	ViChar buffer[256];
+//	visession rm, vi;
+//	vichar buffer[256];
 //	//status variable
-//	ViStatus status;
+//	vistatus status;
 //	//device name
-//	ViString name = ViRsrc("USB::0x0699::0x0364::C020219::INSTR");
+//	vistring name = virsrc("usb::0x0699::0x0364::c020219::instr");
 //
-//	printf("DEVICE NAME: %s\n" , name);
-//	status = viOpenDefaultRM(&rm);
-//	if (status < VI_SUCCESS)
+//	printf("device name: %s\n" , name);
+//	status = viopendefaultrm(&rm);
+//	if (status < vi_success)
 //	{
-//		printf("DEFAULT RM FAILURE");
+//		printf("default rm failure");
 //		goto error;
 //	}
 //	
 //
-//	status = viOpen(rm, name, 0, 5000, &vi);
-//	if (status < VI_SUCCESS) 
+//	status = viopen(rm, name, 0, 5000, &vi);
+//	if (status < vi_success) 
 //	{
-//		printf("VIOPEN FAILURE");
+//		printf("viopen failure");
 //		goto error;
 //	}
 //
-//	// Get VISA Manufacturer Name
-//	//status = viGetAttribute(vi, VI_ATTR_RSRC_MANF_NAME, (ViString)buffer); (ViPAttrState)
-//	status = viGetAttribute(vi, VI_ATTR_RSRC_MANF_NAME, (ViPAttrState)buffer); 
-//	if (status < VI_SUCCESS)
+//	// get visa manufacturer name
+//	//status = vigetattribute(vi, vi_attr_rsrc_manf_name, (vistring)buffer); (vipattrstate)
+//	status = vigetattribute(vi, vi_attr_rsrc_manf_name, (vipattrstate)buffer); 
+//	if (status < vi_success)
 //	{
-//		printf("GET ATTRIBUTE FAILURE");
+//		printf("get attribute failure");
 //		goto error;
 //	}
-//	// Set Timeout to 5 seconds
-//	//viSetAttribute(vi, VI_ATTR_TMO_VALUE, 5000);
-//	//printf(“Manufacturer: %s\n”, buffer);
+//	// set timeout to 5 seconds
+//	//visetattribute(vi, vi_attr_tmo_value, 5000);
+//	//printf(“manufacturer: %s\n”, buffer);
 //
-//	//printf("\nSUCCESS");
-//	printf("Manufacturer name: %s\n\n FUCK YEEESSS", buffer);
-//	viClose(rm);
+//	//printf("\nsuccess");
+//	printf("manufacturer name: %s\n\n fuck yeeesss", buffer);
+//	viclose(rm);
 //
 //	while (1)
 //	{
 //
 //	}
 //error:
-//	printf("\nTHICK!");
-//	viStatusDesc(vi, status, buffer);
+//	printf("\nthick!");
+//	vistatusdesc(vi, status, buffer);
 //	fprintf(stderr, "error reason: %s\n", buffer);
 //	while (1)
 //	{
 //
 //	}
-////	ViSession	rm = VI_NULL, vi = VI_NULL;
-////	ViStatus	status;
-////	ViChar		buffer[256];
-////	double*		wfm = NULL;
+////	visession	rm = vi_null, vi = vi_null;
+////	vistatus	status;
+////	vichar		buffer[256];
+////	double*		wfm = null;
 ////	long		elements, i;
 ////
-////	// Open a default Session
-////	status = viOpenDefaultRM(&rm);
-////	if (status < VI_SUCCESS)
-////		printf("DEFAULT RM ERROR");
+////	// open a default session
+////	status = viopendefaultrm(&rm);
+////	if (status < vi_success)
+////		printf("default rm error");
 ////		goto error;
 ////
-////	// Open the gpib device at primary address 1, gpib board 8
-////	//status = viOpen(rm, (ViString)"GPIB8::1::INSTR", VI_NULL, VI_NULL, &vi);
-////	status = viOpen(rm, (ViString)"USB::0x0699::0x0364::C020219::INSTR", VI_NULL, VI_NULL, &vi);
-////	if (status < VI_SUCCESS) goto error;
+////	// open the gpib device at primary address 1, gpib board 8
+////	//status = viopen(rm, (vistring)"gpib8::1::instr", vi_null, vi_null, &vi);
+////	status = viopen(rm, (vistring)"usb::0x0699::0x0364::c020219::instr", vi_null, vi_null, &vi);
+////	if (status < vi_success) goto error;
 ////
-////	// Read waveform and write it to stdout
-////	wfm = ReadWaveform(vi, &elements);
-////	if (wfm != NULL) {
+////	// read waveform and write it to stdout
+////	wfm = readwaveform(vi, &elements);
+////	if (wfm != null) {
 ////		for (i = 0; i < elements; i++) {
 ////			printf("%f\n", wfm[i]);
 ////		}
 ////	}
 ////
-////	// Clean up
-////	if (wfm != NULL) free(wfm);
-////	viClose(vi); // Not needed, but makes things a bit more understandable
-////	viClose(rm);
+////	// clean up
+////	if (wfm != null) free(wfm);
+////	viclose(vi); // not needed, but makes things a bit more understandable
+////	viclose(rm);
 ////
 ////	return 0;
 ////
 ////error:
-////	// Report error and clean up
-////	viStatusDesc(vi, status, buffer);
+////	// report error and clean up
+////	vistatusdesc(vi, status, buffer);
 ////	fprintf(stderr, "failure: %s\n", buffer);
-////	if (rm != VI_NULL) viClose(rm);
-////	if (wfm != NULL) free(wfm);
+////	if (rm != vi_null) viclose(rm);
+////	if (wfm != null) free(wfm);
 ////	
 ////
 ////	while (1)

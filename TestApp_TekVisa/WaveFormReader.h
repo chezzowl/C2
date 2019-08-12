@@ -34,7 +34,7 @@ public:
 
 private:
 	/*
-	DEFAULT SETTINGS oF CONSTANTS
+	DEFAULT SETTINGS OF CONSTANTS
 	apart from the default buffer size, those values don't have a particular
 	motivation, maybe some will be found during the development process.
 	For now, they serve the purpose of having an initialization.
