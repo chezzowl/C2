@@ -71,7 +71,7 @@ int search (string path) {
 }
 
 
-int main()
+int main1()
 {
 	string path1 = "C:\\Users\\Flo\\Desktop\\C2 Projekt\\Integration_Final\\datensatz*.CSV";
 	string path2 = "C:\\Users\\Flo\\Desktop\\C2 Projekt\\Integration_Final\\area*.CSV";
