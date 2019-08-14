@@ -25,44 +25,39 @@ TODOS:
 - file saving
 - move some reading logic to session.cpp if necessary / convenient
 */
-double* WaveFormReader::readWave(ViSession& session, long* elems_ptr)
+double* WaveFormReader::readWave(ViSession &session, long* elems_ptr)
 {
 	//status variable
 	ViStatus status;
 	ViChar buffer[256]; //TODO: probably to be removed
-	char c;
+	ViChar c;
 	long count, i;
-	double*		ptr = NULL; //TODO: move to Session.h
+	double*	ptr = NULL; //TODO: move to Session.h
 	//variable to track error occurance
 	int err_idx = -5;
 
 	assert(elems_ptr != NULL);
 
+	status = viSetAttribute(session, VI_ATTR_WR_BUF_OPER_MODE, VI_FLUSH_ON_ACCESS);
+	status = viSetAttribute(session, VI_ATTR_RD_BUF_OPER_MODE, VI_FLUSH_ON_ACCESS);
+
 	// Turn headers off, this makes parsing easier
-	status = viPrintf(session, (ViString)"header off\n");
-	if (status < VI_SUCCESS) 
-	{
-		goto error;
-	}
+	status = viPrintf(session, "header off\n");
+	if (status < VI_SUCCESS) goto error;
+
 	std::cout << "header turned off" << std::endl;
 
 	// hor:reco? asks for the record length, saving it to elements
-	status = viQueryf(session, (ViString)"hor:reco?\n", (ViString)"%ld", elems_ptr);
-	if (status < VI_SUCCESS)
-	{
-		goto error;
-	}
+	status = viQueryf(session, "hor:reco?\n", "%ld", elems_ptr);
+	if (status < VI_SUCCESS) goto error;
 
 	std::cout << "record length: " << *elems_ptr << std::endl;
 
 	// Make sure start, stop values for curve query match the full record length
 	//--> data reading starts at one, finishes at record length
 	//TODO: make sure, dereferencing the element pointer is legit
-	status = viPrintf(session, (ViString)"data:start 1;data:stop %d\n", *elems_ptr);
-	if (status < VI_SUCCESS)
-	{
-		goto error;
-	}
+	status = viPrintf(session, "data:start 0;data:stop %d\n", (*elems_ptr)-1);
+	if (status < VI_SUCCESS) goto error;
 
 	
 	//return ptr;
@@ -70,24 +65,24 @@ double* WaveFormReader::readWave(ViSession& session, long* elems_ptr)
 	//// Get the yoffset to help calculate the vertical values.
 	////yoffset passed by reference, meaning that changes to the variable inside the function 
 	////are passed through to the actual argument!
-	//status = viQueryf(session, (ViString)"WFMOutpre:YOFF?\n", (ViString)"%f", &WaveFormReader::y_offset);
-	//if (status < VI_SUCCESS) goto error;
+	status = viQueryf(session, "WFMOutpre:YOFF?\n", "%f", &WaveFormReader::y_offset);
+	if (status < VI_SUCCESS) goto error;
 
 	//// Get the ymult to help calculate the vertical values.
-	//status = viQueryf(session, (ViString)"WFMOutpre:YMULT?\n", (ViString)"%f", &WaveFormReader::y_mult);
-	//if (status < VI_SUCCESS) goto error;
+	status = viQueryf(session, "WFMOutpre:YMULT?\n", "%f", &WaveFormReader::y_mult);
+	if (status < VI_SUCCESS) goto error;
 
 	std::cout << "y offset: " << WaveFormReader::y_offset << std::endl;
 	std::cout << "y multiplication factor: " << WaveFormReader::y_mult << std::endl;
 
 	// Request 8bit binary data on the curve query
 	//TODO: move to Session.cpp
-	status = viPrintf(session, (ViString)"DATA:ENCDG RIBINARY;WIDTH 1\n");
+	status = viPrintf(session, "DATA:ENCDG RIBINARY;WIDTH 1\n");
 	if (status < VI_SUCCESS) goto error;
 
 	// Request the curve
 	//TODO: move to Session.cpp
-	status = viPrintf(session, (ViString)"CURVE?\n");
+	status = viPrintf(session, "CURVE?\n");
 	if (status < VI_SUCCESS) goto error;
 	std::cout << "curve loaded" << std::endl;
 
@@ -98,29 +93,29 @@ double* WaveFormReader::readWave(ViSession& session, long* elems_ptr)
 
 	// Get first char and validate
 	status = viSetAttribute(session, VI_ATTR_RD_BUF_OPER_MODE, VI_FLUSH_DISABLE);
-	status = viScanf(session, (ViString)"%c", &c);
+	status = viScanf(session, "%c", &c);
 	if (status < VI_SUCCESS) goto error;
 	assert(c == '#');
 
-	//// Get width of element field.
-	status = viScanf(session, (ViString)"%c", &c);
+	// Get width of element field.
+	status = viScanf(session, "%c", &c);
 	if (status < VI_SUCCESS) goto error;
 	//assert(c >= '0' && c <= '9');
 
-	//// Read element characters
+	// Read element characters
 	count = c - '0'; //TODO: WHY -23?? is that normal behaviour??
 	for (i = 0; i < count; i++) {
-		status = viScanf(session, (ViString)"%c", &c);
+		status = viScanf(session, "%c", &c);
 		if (status < VI_SUCCESS) goto error;
 		assert(c >= '0' && c <= '9');
 	}
 
-	//// Read waveform into allocated storage
-	////TODO: see if this causes problems!
+	// Read waveform into allocated storage
+	//TODO: see if this causes problems!
 	ptr = (double*)malloc(* elems_ptr * sizeof(double));
 
 	for (i = 0; i < 205; i++) {
-		status = viScanf(session, (ViString)"%c", &c);
+		status = viScanf(session, "%c", &c);
 		if (status < VI_SUCCESS)
 		{
 			err_idx = i;

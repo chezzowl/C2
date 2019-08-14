@@ -4,11 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
-
-//device name, if changed, alter here.. TODO
-//#define ViString DEVICE = "TODO";
-//#define ViUInt32 BUFSIZE_DEFAULT = 1000;
 
 static ViSession defaultRM;
 static ViSession instr;
@@ -18,14 +13,12 @@ static ViUInt32 retCount;
 static ViUInt32 writeCount;
 static ViStatus status;
 static char instrResourceString[VI_FIND_BUFLEN];
-static ViChar c;
-static double* ptr = NULL;
 
 static unsigned char buffer[100];
 static char stringinput[512];
 
-double* test(long* elements) {
-	int i, count;
+int opensession(void){
+	int i;
 
 	/*
 	* First we must call viOpenDefaultRM to get the manager
@@ -47,7 +40,7 @@ double* test(long* elements) {
 		fflush(stdin);
 		getchar();
 		viClose(defaultRM);
-		//return status;
+		return status;
 	}
 
 	/*
@@ -63,13 +56,15 @@ double* test(long* elements) {
 	 * functionality.  These two parameters are given the value VI_NULL.
 	 */
 
-	for (i = 0; i < numInstrs; i++){
+	for (i = 0; i < numInstrs; i++)
+	{
 		if (i > 0)
 			viFindNext(findList, instrResourceString);
 
 		status = viOpen(defaultRM, instrResourceString, VI_NULL, VI_NULL, &instr);
 
-		if (status < VI_SUCCESS){
+		if (status < VI_SUCCESS)
+		{
 			printf("Cannot open a session to the device %d.\n", i + 1);
 			continue;
 		}
@@ -79,26 +74,13 @@ double* test(long* elements) {
 		 * We will now use the viWrite function to send the device the string "*IDN?\n",
 		 * asking for the device's identification.
 		 */
-		//strcpy(stringinput, "DATA:ENCDG RIBINARY;WITH 1\n");
-		status = viPrintf(instr, "DATA:ENCDG RIBINARY;WITH 1\n");
-		if (status < VI_SUCCESS){
+		strcpy(stringinput, "*IDN?\n");
+		status = viWrite(instr, (ViBuf)stringinput, (ViUInt64)strlen(stringinput), &writeCount);
+		if (status < VI_SUCCESS)
+		{
 			printf("Error writing to the device %d.\n", i + 1);
 			status = viClose(instr);
 			continue;
-		}
-
-		//strcpy(stringinput, "CURVE?\n");
-		status = viPrintf(instr, "CURVE?\n");
-		if (status < VI_SUCCESS) {
-			printf("Error writing to the device %d.\n", i + 1);
-			status = viClose(instr);
-			continue;
-		}
-
-		status = viFlush(instr, VI_WRITE_BUF | VI_READ_BUF_DISCARD);
-		if (status < VI_SUCCESS){
-			printf("Error flushing buffer.");
-			status = viClear(instr);
 		}
 
 		/*
@@ -109,44 +91,13 @@ double* test(long* elements) {
 		* before it reads 100 bytes.
 		* After the data has been read the response is displayed.
 		*/
-		status = viScanf(instr,"%c", &c);
+		status = viRead(instr, buffer, 100, &retCount);
 		if (status < VI_SUCCESS) {
-			printf("Error scanning.");
-			status = viClear(instr);
+			printf("Error reading a response from the device %d.\n", i + 1);
 		}
-		//assert(c=='#');
-
-		// Get width of element field.
-		status = viScanf(instr, "%c", &c);
-		//if (status < VI_SUCCESS) goto error;
-		assert(c >= '0' && c <= '9');
-
-		// Read element characters
-		count = c - '0'; //TODO: WHY -23?? is that normal behaviour??
-		for (i = 0; i < count; i++) {
-			status = viScanf(instr, "%c", &c);
-			//if (status < VI_SUCCESS) goto error;
-			assert(c >= '0' && c <= '9');
+		else {
+			printf("\nDevice %d: %*s\n", i + 1, retCount, buffer);
 		}
-
-		// Read waveform into allocated storage
-		//TODO: see if this causes problems!
-		ptr = (double*)malloc(*elements * sizeof(double));
-
-		for (i = 0; i < 205; i++) {
-			status = viScanf(instr, "%c", &c);
-			if (status < VI_SUCCESS){
-				printf("Error");
-				//goto error;
-			}
-			ptr[i] = (double) c;
-		}
-
-
-		//status = viFlush(session, VI_WRITE_BUF | VI_READ_BUF_DISCARD);
-		//if (status < VI_SUCCESS) goto error;
-
-		return ptr;
 		status = viClose(instr);
 	}
 

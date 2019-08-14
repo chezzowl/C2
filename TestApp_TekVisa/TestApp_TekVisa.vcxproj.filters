@@ -27,6 +27,12 @@
     <ClInclude Include="WaveFormReader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GetDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lock_example.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TestApp_TekVisa.cpp">

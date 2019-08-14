@@ -14,7 +14,7 @@ ViString dev;
 ViUInt32 bufsize;
 
 /*necessary ViSessions, i.e. one default resource manager and the session itself*/
-ViSession rm, vi;
+ViSession rm = NULL, vi = NULL;
 
 /*
 indicators, whether a session is running (may be useful later on)
