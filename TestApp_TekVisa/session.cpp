@@ -57,7 +57,7 @@ double* WaveReader(ViSession rm, long* elemts, ViChar errorBuffer[256]) {
 
 	assert(elemts != NULL);
 
-	printf("number of elements : %ld\n", (*elemts) - 1);
+	printf("number of elements : %ld\n", *elemts);
 
 	status = viPrintf(rm, "data:start %d;data:stop %d", 0, (*elemts) - 1);
 	if (status < VI_SUCCESS) goto error;
